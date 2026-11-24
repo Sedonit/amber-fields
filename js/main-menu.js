@@ -10,6 +10,7 @@ const MainMenu = {
         const btnReload = document.getElementById('btn-reload-after-start');
 
         this.refreshPlayButton();
+        this.initHiddenAdmin();
 
         if (btnPlay) {
             btnPlay.addEventListener('click', () => {
@@ -87,6 +88,56 @@ const MainMenu = {
 
             renderSound();
         }
+    },
+
+    // Скрытый вход в админку.
+    // Секрет: двойной клик по логотипу, затем в настройках переключить язык RU → EN.
+    initHiddenAdmin() {
+        const logo = document.querySelector('.logo-wrapper');
+        const langGroup = document.querySelector('.toggle-group[data-setting="language"]');
+        if (!logo || !langGroup) return;
+
+        this._adminUnlockArmed = false;
+
+        // Первый шаг — двойной клик по логотипу
+        logo.addEventListener('dblclick', () => {
+            this._adminUnlockArmed = true;
+        });
+
+        // Слушаем группу в фазе перехвата, чтобы увидеть состояние ДО клика
+        // (к этому моменту RU ещё активен, переключение в EN только предстоит).
+        langGroup.addEventListener('click', (event) => {
+            if (!this._adminUnlockArmed) return;
+
+            const option = event.target.closest('.toggle-option');
+            if (!option || option.dataset.value !== 'en') return;
+
+            const settings = document.getElementById('modal-settings');
+            const settingsOpen = settings && settings.classList.contains('active');
+            if (!settingsOpen) return;
+
+            const ruOption = langGroup.querySelector('.toggle-option[data-value="ru"]');
+            if (!ruOption || !ruOption.classList.contains('active')) return;
+
+            this._adminUnlockArmed = false;
+            this.revealAdminGate();
+        }, true);
+    },
+
+    // Прячем настройки и показываем форму входа админки
+    revealAdminGate() {
+        if (typeof Modal !== 'undefined' && typeof Modal.close === 'function') {
+            Modal.close();
+        }
+
+        setTimeout(() => {
+            if (typeof Admin === 'undefined') return;
+            if (typeof Admin.openGate === 'function') {
+                Admin.openGate();
+            } else {
+                Admin.open();
+            }
+        }, 300);
     },
 
     // Подпись главной кнопки зависит от наличия сохранения.

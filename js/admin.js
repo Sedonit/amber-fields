@@ -373,6 +373,19 @@ const Admin = (function () {
         log('open');
     }
 
+    // Принудительно показать форму входа (логин + пароль + дата),
+    // даже если доступ уже был выдан автоматически через admins.js.
+    // Используется секретным входом из главного меню.
+    function openGate() {
+        if (!initialized) init();
+        buildRootIfNeeded();
+
+        isOpen = true;
+        showGate();
+        syncFab();
+        log('open gate');
+    }
+
     function close() {
         if (!root) return;
 
@@ -998,6 +1011,7 @@ const Admin = (function () {
 
     return {
         open: open,
+        openGate: openGate,
         close: close,
         init: init
     };
