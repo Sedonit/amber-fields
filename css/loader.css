@@ -1,0 +1,1266 @@
+@property --ambient-color {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #0a0612;
+}
+
+@property --ambient-accent {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: #ffd97a;
+}
+
+:root {
+    --ambient-color: #0a0612;
+    transition: --ambient-color 4s ease; /* Плавный переход за 4 секунды */
+}
+
+/* Палитра для экранов: --ambient-color — глубина фона, --ambient-accent — цвет свечения */
+body.theme-loader     { --ambient-color: #1a201c; --ambient-accent: #57d39b; } /* Загрузка (мох) */
+body.theme-menu       { --ambient-color: #1a1020; --ambient-accent: #ffb45c; } /* Меню (янтарь) */
+body.theme-intro      { --ambient-color: #05030a; --ambient-accent: #7fe0d0; } /* Интро (бирюза) */
+body.theme-game       { --ambient-color: #1a1020; --ambient-accent: #ffd97a; } /* Игра (золото) */
+body.theme-credits    { --ambient-color: #0a0612; --ambient-accent: #ffd97a; } /* Титры (янтарь) */
+body.theme-help       { --ambient-color: #0a0612; --ambient-accent: #b07cff; } /* Помощь (лаванда) */
+
+body {
+    transition: --ambient-color 1.2s ease, --ambient-accent 1.2s ease;
+}
+
+/* === AMBIENT: динамический фон для больших экранов === */
+.ambient-stage {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 1.4s ease;
+}
+
+.ambient-stage.ready { opacity: 1; }
+
+.ambient-stage i {
+    position: absolute;
+    display: block;
+    width: 78vmax;
+    height: 78vmax;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.26;
+    will-change: transform;
+}
+
+.ambient-stage i:nth-child(1) {
+    left: -30vmax;
+    top: -36vmax;
+    background: radial-gradient(circle, var(--ambient-accent) 0%, transparent 62%);
+    animation: ambientFloatA 38s ease-in-out infinite;
+}
+
+.ambient-stage i:nth-child(2) {
+    right: -34vmax;
+    bottom: -40vmax;
+    background: radial-gradient(circle, var(--ambient-accent) 0%, transparent 64%);
+    filter: blur(80px) hue-rotate(32deg);
+    opacity: 0.2;
+    animation: ambientFloatB 46s ease-in-out infinite;
+}
+
+.ambient-stage i:nth-child(3) {
+    left: 32%;
+    top: 44%;
+    width: 52vmax;
+    height: 52vmax;
+    background: radial-gradient(circle, var(--ambient-color) 0%, transparent 60%);
+    filter: blur(96px);
+    opacity: 0.55;
+    animation: ambientFloatC 54s ease-in-out infinite;
+}
+
+@keyframes ambientFloatA {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50%      { transform: translate3d(6vmax, 4vmax, 0) scale(1.12); }
+}
+
+@keyframes ambientFloatB {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1.06); }
+    50%      { transform: translate3d(-7vmax, -5vmax, 0) scale(1); }
+}
+
+@keyframes ambientFloatC {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+    50%      { transform: translate3d(-5vmax, 6vmax, 0) scale(1.1); }
+}
+
+/* Дополнительные слои нужны только там, где есть свободные поля вокруг игры */
+@media (max-width: 899px) {
+    .ambient-stage { display: none; }
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--ambient-color);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    position: relative;
+}
+
+/* Свечение и виньетка (как в YouTube) */
+body::after {
+    content: '';
+    position: fixed;
+    inset: -20%;
+    background: radial-gradient(ellipse at center, var(--ambient-color) 0%, transparent 65%);
+    filter: blur(60px);
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.45) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Мобильный фрейм-контейнер */
+.screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 480px;
+    height: 854px;
+    transform-origin: center center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.4s ease;
+    box-sizing: border-box;
+    padding: 0;
+    overflow: hidden;
+    background: transparent;
+}
+
+.screen.active {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+.screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+/* Светлый фон загрузчика, скрывающий окантовку GIF */
+/* Уютный темновато-пастельный фон, не бьющий по глазам */
+#loader-screen {
+    background: radial-gradient(circle, #2d3732 0%, #1a201c 100%); 
+}
+
+.loader-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+    /* Контр-растяжение: если экран растянут по вертикали в R раз,
+       мы сжимаем контент по вертикали в R раз, чтобы он остался пропорциональным */
+    transform: scaleY(calc(1 / var(--stretch-ratio, 1)));
+    transform-origin: center center;
+}
+
+#loader-gif {
+    /* Размер одного кадра на экране. Ширина спрайта = 5 кадров. */
+    --frame: 200px;
+    width: var(--frame);
+    height: var(--frame);
+    margin-bottom: 25px;
+    /* Спрайт-лист: 5 кадров 200x200 в одном PNG 1000x200 */
+    background-image: url('../assets/images/loading.png');
+    background-repeat: no-repeat;
+    background-size: calc(var(--frame) * 5) var(--frame);
+    background-position: 0 0;
+    image-rendering: pixelated;
+    /* Сдвиг ровно на один кадр за шаг — без плавного «проезда» спрайта */
+    /* 5 кадров за 2 секунды ≈ 2.5 FPS */
+    animation: loaderSprite 2s steps(5) infinite;
+    /* Убираем жесткий белый ореол за счет режима наложения */
+   /* mix-blend-mode: screen; /*
+    /* Если гифка станет слишком светлой, можно раскомментировать строку ниже: */
+    /* filter: drop-shadow(0 0 2px rgba(0,0,0,0.5)); */
+}
+
+@keyframes loaderSprite {
+    from { background-position: 0 0; }
+    to   { background-position: calc(var(--frame) * -5) 0; }
+}
+
+/* Полоса прогресса */
+.progress-container {
+    width: 100%;
+    height: 14px;
+    background-color: #111814;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid #3e4f45;
+}
+
+#progress-bar {
+    width: 0%;
+    height: 100%;
+    background: #27ae60;
+    transition: width 0.15s linear;
+    border-radius: 20px;
+    box-shadow: 0 0 8px rgba(39, 174, 96, 0.5);
+    
+    position: relative;
+    overflow: hidden;
+}
+
+#progress-bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        110deg,
+        transparent 0%,
+        transparent 35%,
+        rgba(255, 255, 255, 0.55) 50%,
+        transparent 65%,
+        transparent 100%
+    );
+    background-size: 250% 100%;
+    animation: progressShimmer 1.8s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes progressShimmer {
+    0%   { background-position: 150% 0; }
+    100% { background-position: -50% 0; }
+}
+
+/* Стили подсказок */
+.hint-text {
+    margin-top: 25px;
+    font-size: 13px;
+    color: #a0b2a6;
+    line-height: 1.4;
+    min-height: 42px;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.gif-wrapper {
+    width: 200px;
+    height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent; /* Прозрачный фон */
+    margin-bottom: 20px;
+}
+
+/* Статус загрузки */
+#loader-status {
+    margin-top: 14px;
+    font-size: 14px;
+    color: #e0e0e0;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+/* Изменение цвета статуса при долгой загрузке */
+#loader-status.long-wait {
+    color: #f1c40f;
+}
+/* Жёлтый флаг: сеть тормозит, но всё ещё грузится */
+.warning-box {
+    margin-top: 14px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 7px;
+    padding: 10px 12px 11px;
+    background: rgba(241, 196, 15, 0.10);
+    border: 1px solid rgba(241, 196, 15, 0.34);
+    border-radius: 12px;
+    text-align: left;
+    animation: fadeIn 0.35s ease-in-out;
+}
+
+.warning-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #f5c542;
+}
+
+/* Флажок на древке */
+.flag-icon {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    border-left: 2px solid #f5c542;
+    border-radius: 1px;
+}
+
+.flag-icon::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0;
+    width: 11px;
+    height: 8px;
+    background: linear-gradient(135deg, #ffd166 0%, #f0a020 100%);
+    clip-path: polygon(0 0, 100% 0, 76% 50%, 100% 100%, 0 100%);
+    border-radius: 1px 2px 2px 0;
+    transform-origin: left center;
+    animation: flagWave 1.9s ease-in-out infinite;
+}
+
+@keyframes flagWave {
+    0%, 100% { transform: skewY(0deg) scaleX(1); }
+    50%      { transform: skewY(-5deg) scaleX(0.92); }
+}
+
+.warning-text {
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #d9b26a;
+}
+
+.warning-actions {
+    display: flex;
+    gap: 7px;
+    width: 100%;
+}
+
+.ghost-btn {
+    flex: 1;
+    padding: 8px 8px;
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #f0dcc0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(241, 196, 15, 0.35);
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.ghost-btn:hover { background: rgba(241, 196, 15, 0.16); }
+.ghost-btn:active { transform: scale(0.97); }
+
+.ghost-btn--warn {
+    color: #ffd9a1;
+    background: rgba(241, 140, 15, 0.14);
+    border-color: rgba(241, 140, 15, 0.45);
+}
+
+.ghost-btn--warn:hover { background: rgba(241, 140, 15, 0.24); }
+
+/* Ошибка загрузки */
+.error-box {
+    margin-top: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px 11px;
+    background: rgba(231, 76, 60, 0.10);
+    border: 1px solid rgba(231, 76, 60, 0.36);
+    border-radius: 12px;
+    text-align: left;
+    animation: fadeIn 0.35s ease-in-out;
+}
+
+.error-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #ff8b7d;
+}
+
+.error-icon {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #e74c3c;
+    color: #2a0f0c;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+.error-text {
+    margin: 0;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: #e6b3ab;
+}
+
+/* Состояния полосы прогресса */
+#progress-bar.is-stalled {
+    background: linear-gradient(90deg, #d99b1c 0%, #f5c542 100%);
+    box-shadow: 0 0 10px rgba(241, 196, 15, 0.45);
+}
+
+#progress-bar.is-stalled::after {
+    animation-duration: 2.8s;
+    opacity: 0.6;
+}
+
+#progress-bar.is-error {
+    background: #8a2d24;
+    box-shadow: none;
+}
+
+#progress-bar.is-error::after { display: none; }
+
+#loader-status.is-error { color: #ff7b6b; }
+
+.hidden-element {
+    display: none !important;
+}
+/* Затемнение гифки при успехе или ошибке */
+#loader-gif.dimmed {
+    filter: brightness(0.3) blur(2px);
+    transition: filter 0.5s ease;
+}
+
+/* Блок успешной загрузки */
+.success-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+    animation: dropIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.checkmark-icon {
+    width: 48px;
+    height: 48px;
+    background: #27ae60;
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: bold;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.5);
+    margin-bottom: 6px;
+}
+
+.success-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2ecc71;
+}
+
+/* Анимация приземления галочки сверху */
+@keyframes dropIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.5);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Контейнер для кнопок по центру под советами */
+.loader-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Кнопка "Продолжить" */
+.continue-btn {
+    width: 100%;
+    max-width: 260px;
+    margin-top: 15px;
+    padding: 14px 20px;
+    font-size: 17px;
+    font-weight: bold;
+    color: #ffffff;
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(39, 174, 96, 0.35);
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.continue-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+/* Кнопка "Повторить попытку" */
+.retry-btn {
+    width: 100%;
+    max-width: 260px;
+    margin-top: 15px;
+    padding: 13px 20px;
+    font-size: 15px;
+    font-weight: bold;
+    color: #ffffff;
+    background: #e74c3c;
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.35);
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.retry-btn:active {
+    transform: scale(0.96);
+}
+/* ============================================================
+   ОКНО ТЕХНИЧЕСКИХ РАБОТ — «НОЧНАЯ СМЕНА НА AMBER FIELDS»
+   ============================================================ */
+.maintenance-box {
+    position: fixed;
+    inset: 0;
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: clamp(16px, 4vmin, 40px);
+    box-sizing: border-box;
+    overflow: hidden;
+    isolation: isolate;
+    background: #06040d;
+    animation: maintenanceFade 0.7s ease-out;
+}
+
+@keyframes maintenanceFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* === СЛОИ ФОНА === */
+.maintenance-scene {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.msky {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(180deg,
+            #05030b 0%,
+            #0b0718 30%,
+            #1a0d26 52%,
+            #2c1428 70%,
+            #3a1d26 82%,
+            #150a16 100%);
+}
+
+/* Лунная дымка */
+.msky::before {
+    content: '';
+    position: absolute;
+    top: -18%;
+    right: -10%;
+    width: 55vmax;
+    height: 55vmax;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 214, 170, 0.10) 0%, rgba(255, 160, 120, 0.04) 35%, transparent 65%);
+}
+
+/* Падающая звезда */
+.msky::after {
+    content: '';
+    position: absolute;
+    top: 14%;
+    left: -18%;
+    width: 150px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 236, 214, 0.85) 70%, #fff 100%);
+    border-radius: 999px;
+    filter: drop-shadow(0 0 6px rgba(255, 220, 180, 0.8));
+    transform: rotate(16deg);
+    opacity: 0;
+    animation: shootingStar 14s ease-in infinite 4s;
+}
+
+@keyframes shootingStar {
+    0%, 82%  { opacity: 0; transform: translate3d(0, 0, 0) rotate(16deg) scaleX(0.5); }
+    84%      { opacity: 1; }
+    92%      { opacity: 0.85; transform: translate3d(140vw, 40vh, 0) rotate(16deg) scaleX(1); }
+    100%     { opacity: 0; transform: translate3d(140vw, 40vh, 0) rotate(16deg) scaleX(1); }
+}
+
+/* Полярные сияния — большие мягкие пятна */
+.maurora {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    mix-blend-mode: screen;
+    will-change: transform;
+}
+
+.maurora-1 {
+    width: 80vmax;
+    height: 42vmax;
+    left: -30vmax;
+    top: -6vmax;
+    background: radial-gradient(closest-side, rgba(255, 150, 80, 0.30), transparent 75%);
+    animation: auroraDrift1 28s ease-in-out infinite alternate;
+}
+
+.maurora-2 {
+    width: 62vmax;
+    height: 40vmax;
+    right: -24vmax;
+    top: 8vmax;
+    background: radial-gradient(closest-side, rgba(220, 90, 160, 0.22), transparent 75%);
+    animation: auroraDrift2 34s ease-in-out infinite alternate;
+}
+
+.maurora-3 {
+    width: 70vmax;
+    height: 34vmax;
+    left: 0;
+    bottom: -18vmax;
+    background: radial-gradient(closest-side, rgba(255, 180, 90, 0.20), rgba(140, 60, 120, 0.12) 50%, transparent 78%);
+    animation: auroraDrift3 24s ease-in-out infinite alternate;
+}
+
+@keyframes auroraDrift1 {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(10vmax, 5vmax, 0) scale(1.15); }
+}
+
+@keyframes auroraDrift2 {
+    from { transform: translate3d(0, 0, 0) scale(1.1); }
+    to   { transform: translate3d(-8vmax, 7vmax, 0) scale(1); }
+}
+
+@keyframes auroraDrift3 {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(-6vmax, -4vmax, 0) scale(1.12); }
+}
+
+/* Звёзды (создаются из JS) */
+.mstars {
+    position: absolute;
+    inset: 0;
+}
+
+.mstar {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: #fff6e6;
+    opacity: 0.65;
+    box-shadow: 0 0 6px rgba(255, 220, 180, 0.7);
+    animation: starTwinkle var(--dur) ease-in-out var(--delay) infinite;
+}
+
+.mstar--big {
+    box-shadow:
+        0 0 8px rgba(255, 230, 200, 0.9),
+        0 0 18px rgba(255, 180, 120, 0.5);
+}
+
+@keyframes starTwinkle {
+    0%, 100% { opacity: 0.2; transform: scale(0.8); }
+    50%      { opacity: 1;   transform: scale(1.15); }
+}
+
+/* Тёплое зарево над горизонтом */
+.mhorizon {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 50%;
+    background: radial-gradient(ellipse 70% 100% at 50% 100%,
+        rgba(255, 170, 80, 0.22) 0%,
+        rgba(220, 110, 90, 0.10) 45%,
+        transparent 72%);
+}
+
+/* Холмы */
+.mhills {
+    position: absolute;
+    left: -15%;
+    width: 130%;
+    border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+
+.mhills-far {
+    bottom: -6%;
+    height: 28%;
+    background: linear-gradient(180deg, #150c20 0%, #0b0615 100%);
+    opacity: 0.85;
+}
+
+.mhills-near {
+    bottom: -12%;
+    height: 24%;
+    background: linear-gradient(180deg, #0d0718 0%, #070410 100%);
+}
+
+/* Светлячки (создаются из JS) */
+.mfireflies {
+    position: absolute;
+    inset: 0;
+}
+
+.mfirefly {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--s);
+    height: var(--s);
+    border-radius: 50%;
+    background: #ffcf87;
+    box-shadow:
+        0 0 6px 1px rgba(255, 190, 110, 0.9),
+        0 0 16px 4px rgba(255, 150, 80, 0.35);
+    opacity: 0;
+    animation: fireflyFloat var(--dur) ease-in-out var(--delay) infinite;
+}
+
+@keyframes fireflyFloat {
+    0%   { opacity: 0;    transform: translate3d(0, 0, 0) scale(0.6); }
+    20%  { opacity: 0.9; }
+    50%  { opacity: 0.35; transform: translate3d(14px, -26px, 0) scale(1); }
+    75%  { opacity: 0.85; }
+    100% { opacity: 0;    transform: translate3d(-10px, -52px, 0) scale(0.5); }
+}
+
+/* Плёночное зерно */
+.mgrain {
+    position: absolute;
+    inset: -30px;
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.55'/></svg>");
+    background-size: 180px 180px;
+    animation: grainShift 1.1s steps(3) infinite;
+}
+
+@keyframes grainShift {
+    0%   { transform: translate3d(0, 0, 0); }
+    33%  { transform: translate3d(-6px, 4px, 0); }
+    66%  { transform: translate3d(5px, -5px, 0); }
+    100% { transform: translate3d(0, 0, 0); }
+}
+
+/* Лёгкие сканлайны */
+.mscanlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.028) 0px,
+        rgba(255, 255, 255, 0.028) 1px,
+        transparent 1px,
+        transparent 3px);
+    opacity: 0.7;
+}
+
+/* Виньетка */
+.mvignette {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 75% 65% at 50% 42%, transparent 30%, rgba(3, 2, 8, 0.55) 78%, rgba(2, 1, 6, 0.92) 100%),
+        linear-gradient(180deg, rgba(2, 1, 6, 0.45) 0%, transparent 22%, transparent 78%, rgba(2, 1, 6, 0.55) 100%);
+}
+
+/* === КОНТЕНТ === */
+.maintenance-content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 360px;
+    max-height: 100%;
+    text-align: center;
+    padding: 8px 4px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    animation: maintenanceRise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.maintenance-content::-webkit-scrollbar { display: none; }
+
+@keyframes maintenanceRise {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Кикер над сферой */
+.maintenance-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 15px;
+    margin-bottom: clamp(16px, 3.4vmin, 26px);
+    border: 1px solid rgba(255, 205, 150, 0.20);
+    border-radius: 999px;
+    background: rgba(18, 11, 26, 0.5);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #d8c0a3;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.kicker-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ffb56b;
+    box-shadow: 0 0 8px 1px rgba(255, 170, 90, 0.8);
+    animation: kickerPulse 1.8s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes kickerPulse {
+    0%, 100% { opacity: 0.45; transform: scale(0.85); }
+    50%      { opacity: 1;    transform: scale(1.15); }
+}
+
+/* === СФЕРА С ЕНОТОМ (кружок как в Telegram) === */
+.raccoon-sphere {
+    --orb: clamp(148px, 34vmin, 196px);
+    position: relative;
+    width: calc(var(--orb) + 52px);
+    height: calc(var(--orb) + 52px);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    animation: orbFloat 7s ease-in-out infinite;
+}
+
+@keyframes orbFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-7px); }
+}
+
+/* Свечение под кружком: цвет берётся из самого видео */
+.sphere-ambient {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: calc(var(--orb) * 1.45);
+    height: calc(var(--orb) * 1.45);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    display: block;
+    filter: blur(30px) saturate(1.6);
+    opacity: 0;
+    transition: opacity 1s ease;
+    pointer-events: none;
+}
+
+.sphere-ambient.is-live { opacity: 0.6; }
+
+.sphere-glow {
+    position: absolute;
+    inset: 8%;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+        rgba(255, 185, 95, 0.45) 0%,
+        rgba(255, 120, 170, 0.22) 42%,
+        transparent 70%);
+    filter: blur(18px);
+    animation: spherePulse 4s ease-in-out infinite;
+}
+
+@keyframes spherePulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.1); }
+}
+
+/* Мягкое гало-кольцо */
+.sphere-halo {
+    position: absolute;
+    inset: 2%;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 212, 160, 0.18);
+    box-shadow:
+        0 0 0 10px rgba(255, 190, 120, 0.03),
+        0 0 60px 12px rgba(255, 160, 90, 0.14);
+}
+
+/* Вращающееся градиентное кольцо */
+.sphere-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(255, 200, 130, 0.95) 45deg,
+        rgba(255, 140, 180, 0.85) 100deg,
+        rgba(170, 130, 255, 0.55) 150deg,
+        transparent 210deg,
+        transparent 360deg);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+    animation: ringRotate 7s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(255, 180, 110, 0.55));
+}
+
+@keyframes ringRotate {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* Пунктирная орбита с бегущей точкой */
+.sphere-orbit {
+    position: absolute;
+    inset: 12px;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 220, 170, 0.20);
+    animation: orbitSpin 26s linear infinite;
+}
+
+@keyframes orbitSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.orbit-dot {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    margin-left: -3px;
+    border-radius: 50%;
+    background: #ffd27a;
+    box-shadow: 0 0 10px 2px rgba(255, 180, 90, 0.85);
+}
+
+/* Рамка-линза вокруг видео */
+.sphere-frame {
+    position: relative;
+    width: var(--orb);
+    height: var(--orb);
+    border-radius: 50%;
+    padding: 4px;
+    box-sizing: border-box;
+    background: linear-gradient(155deg,
+        rgba(255, 236, 205, 0.9) 0%,
+        rgba(255, 160, 120, 0.5) 38%,
+        rgba(190, 130, 190, 0.45) 66%,
+        rgba(255, 214, 160, 0.75) 100%);
+    box-shadow:
+        0 0 0 1px rgba(255, 220, 180, 0.12),
+        0 24px 60px -18px rgba(0, 0, 0, 0.9),
+        0 0 50px rgba(255, 160, 90, 0.22);
+    animation: frameBreathe 6s ease-in-out infinite;
+}
+
+@keyframes frameBreathe {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(255, 220, 180, 0.12), 0 24px 60px -18px rgba(0, 0, 0, 0.9), 0 0 40px rgba(255, 160, 90, 0.18); }
+    50%      { box-shadow: 0 0 0 1px rgba(255, 220, 180, 0.18), 0 24px 60px -18px rgba(0, 0, 0, 0.9), 0 0 70px rgba(255, 160, 90, 0.32); }
+}
+
+/* Сам кружок с видео */
+.maintenance-video {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    background: #120a18;
+    box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.55);
+}
+
+/* Блик и внутренняя тень на «линзе» */
+.sphere-shine {
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 32% 22%, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.06) 22%, transparent 46%),
+        radial-gradient(circle at 55% 118%, rgba(255, 170, 90, 0.20) 0%, transparent 58%);
+    box-shadow: inset 0 0 26px rgba(0, 0, 0, 0.5);
+}
+
+/* === ИСКРЫ === */
+.spark {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #ffd97a;
+    border-radius: 1px;
+    box-shadow: 0 0 8px 1px rgba(255, 179, 71, 0.9);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.spark-1 { top: 12%; left: 8%; animation: sparkFloat 3.2s ease-in-out infinite; }
+.spark-2 { top: 16%; right: 10%; animation: sparkFloat 2.8s ease-in-out infinite 0.4s; }
+.spark-3 { bottom: 14%; left: 12%; animation: sparkFloat 3.6s ease-in-out infinite 0.8s; }
+.spark-4 { bottom: 10%; right: 8%; animation: sparkFloat 3.0s ease-in-out infinite 1.2s; }
+.spark-5 { top: 50%; left: -2%; animation: sparkFloat 2.5s ease-in-out infinite 0.6s; }
+.spark-6 { top: 45%; right: -1%; animation: sparkFloat 3.4s ease-in-out infinite 1.6s; }
+
+@keyframes sparkFloat {
+    0%, 100% { transform: translateY(0) scale(0.7); opacity: 0.35; }
+    50%      { transform: translateY(-14px) scale(1.3); opacity: 1; }
+}
+
+/* Подпись под сферой */
+.sphere-caption {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 6px 0 clamp(14px, 2.8vmin, 22px);
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: #e7c9a4;
+    opacity: 0.85;
+}
+
+.caption-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #ffb56b;
+    box-shadow: 0 0 6px rgba(255, 170, 90, 0.9);
+    animation: kickerPulse 2.2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+/* === ЗАГОЛОВОК === */
+.maintenance-title {
+    margin: 0 0 clamp(14px, 2.6vmin, 20px);
+    font-family: 'Press Start 2P', 'Segoe UI', system-ui, monospace;
+    font-size: clamp(12px, 2.9vmin, 16px);
+    font-weight: normal;
+    line-height: 1.95;
+    letter-spacing: 0.02em;
+    color: #f7e9d2;
+    text-shadow:
+        0 0 22px rgba(255, 170, 90, 0.28),
+        0 2px 0 rgba(0, 0, 0, 0.4);
+}
+
+.title-line {
+    display: block;
+}
+
+.title-accent {
+    background: linear-gradient(95deg, #ffd88a 0%, #ffa15e 35%, #ff86ab 65%, #ffd88a 100%);
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 16px rgba(255, 150, 90, 0.35));
+    animation: titleShimmer 9s ease-in-out infinite;
+}
+
+@keyframes titleShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+}
+
+/* === ТЕКСТ ПРИЧИНЫ === */
+.maintenance-message {
+    margin: 0;
+    max-width: 310px;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.75;
+    color: #e8d5b8;
+    text-align: center;
+    opacity: 0.86;
+    text-wrap: pretty;
+}
+
+/* === СТАТУС-КОНСОЛЬ === */
+.maintenance-status {
+    width: 100%;
+    max-width: 290px;
+    margin-top: clamp(18px, 3vmin, 26px);
+    padding: 12px 14px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 205, 150, 0.16);
+    background: linear-gradient(180deg, rgba(32, 19, 42, 0.62) 0%, rgba(12, 8, 20, 0.55) 100%);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow:
+        0 20px 44px -22px rgba(0, 0, 0, 0.95),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.status-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #c4ab90;
+}
+
+.status-chevron {
+    font-style: normal;
+    color: #ffb56b;
+    margin-right: 4px;
+}
+
+.status-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.status-dots i {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #ffb56b;
+    animation: statusBlink 1.4s ease-in-out infinite;
+}
+
+.status-dots i:nth-child(2) { animation-delay: 0.18s; }
+.status-dots i:nth-child(3) { animation-delay: 0.36s; }
+
+@keyframes statusBlink {
+    0%, 100% { opacity: 0.2; transform: scale(0.7); }
+    50%      { opacity: 1;   transform: scale(1); }
+}
+
+.status-track {
+    position: relative;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+}
+
+.status-fill {
+    position: absolute;
+    inset: 0;
+    width: 42%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255, 192, 106, 0) 0%, #ffc06a 35%, #ff8fb0 70%, rgba(255, 143, 176, 0) 100%);
+    animation: statusSlide 2.8s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    box-shadow: 0 0 12px rgba(255, 170, 110, 0.6);
+}
+
+@keyframes statusSlide {
+    0%   { transform: translateX(-105%); }
+    100% { transform: translateX(245%); }
+}
+
+/* Подпись внизу */
+.maintenance-foot {
+    margin-top: 16px;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(232, 213, 184, 0.42);
+}
+
+/* === УВАЖЕНИЕ К ПРЕДПОЧТЕНИЯМ ДВИЖЕНИЯ === */
+@media (prefers-reduced-motion: reduce) {
+    .maurora,
+    .mstar,
+    .mfirefly,
+    .mgrain,
+    .msky::after,
+    .raccoon-sphere,
+    .title-accent,
+    .ambient-stage i,
+    .sphere-glow,
+    .sphere-ring,
+    .sphere-orbit,
+    .sphere-frame,
+    .spark,
+    .kicker-dot,
+    .caption-dot,
+    .status-dots i,
+    .status-fill {
+        animation: none !important;
+    }
+
+    .mfirefly { opacity: 0.7; }
+    .status-fill { width: 100%; opacity: 0.5; }
+}
+
+/* В альбомной ориентации на телефоне убираем лишний воздух */
+@media (max-height: 560px) {
+    .maintenance-kicker { display: none; }
+    .raccoon-sphere { --orb: clamp(110px, 26vmin, 150px); }
+    .sphere-caption { margin-bottom: 10px; }
+    .maintenance-title { line-height: 1.7; }
+    .maintenance-status { margin-top: 14px; }
+    .maintenance-foot { margin-top: 10px; }
+}

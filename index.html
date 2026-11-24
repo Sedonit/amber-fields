@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>farming vibe simulator</title>
+    
+    <link rel="stylesheet" href="css/loader.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/main-menu.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/help.css">
+    <link rel="stylesheet" href="css/intro.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link href="assets/fonts/PressStart2P-Regular.ttf" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Экран Загрузки -->
+    <div id="loader-screen" class="screen active">
+        <div class="loader-content">
+            <div class="gif-wrapper">
+                <div id="loader-gif" class="loader-sprite" role="img" aria-label="Загрузка..."></div>
+            </div>
+
+            <!-- Блок анимации Галочки Успеха -->
+            <div id="loader-success" class="success-box hidden-element">
+                <div class="checkmark-icon">✓</div>
+                <div class="success-text">Мы догнали енота!</div>
+            </div>
+            
+            <div class="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            
+            <div id="loader-status" role="status" aria-live="polite">Загрузка ресурсов... 0%</div>
+
+            <!-- Жёлтый флаг: грузится слишком долго, но не сломалось -->
+            <div id="loader-warning" class="warning-box hidden-element" role="status">
+                <div class="warning-head">
+                    <span class="flag-icon" aria-hidden="true"></span>
+                    Долгая загрузка
+                </div>
+                <p id="warning-text" class="warning-text">Соединение медленнее обычного — файлы всё ещё идут.</p>
+                <div class="warning-actions">
+                    <button id="btn-wait" class="ghost-btn" type="button">Подождать ещё</button>
+                    <button id="btn-warning-retry" class="ghost-btn ghost-btn--warn" type="button">Перезапустить</button>
+                </div>
+            </div>
+
+            <!-- Ошибка загрузки: без повтора дальше не пройти -->
+            <div id="loader-error" class="error-box hidden-element" role="alert">
+                <div class="error-head">
+                    <span class="error-icon" aria-hidden="true">!</span>
+                    Ошибка загрузки
+                </div>
+                <p id="error-text" class="error-text">Не удалось загрузить ресурсы.</p>
+            </div>
+
+            <!-- Динамические советы -->
+            <div id="loader-hint" class="hint-text"></div>
+
+            <!-- КНОПКИ В ЦЕНТРЕ ПОД СОВЕТАМИ -->
+            <div class="loader-actions">
+                <button id="btn-retry" class="retry-btn hidden-element">↻ Повторить попытку</button>
+                <button id="btn-continue" class="continue-btn hidden-element">Продолжить ➔</button>
+            </div>
+        </div>
+    </div>
+<div id="intro-screen" class="screen hidden">
+    <!-- Слой 1: Офис -->
+    <div class="intro-scene" id="scene-office">
+        <div class="intro-bg office-bg"></div>
+    </div>
+
+    <!-- Слой 2: Звонок -->
+    <div class="intro-scene" id="scene-phone">
+        <div class="intro-bg office-bg blurred"></div>
+        <div class="phone-container">
+            <!-- Картинки наложены друг на друга -->
+            <img src="assets/images/intro/phone-incoming.webp" class="intro-phone" id="phone-incoming" alt="Incoming">
+            <img src="assets/images/intro/phone-accept.webp" class="intro-phone" id="phone-accept" alt="Accept">
+        </div>
+    </div>
+
+    <!-- Слой 3: Диалог -->
+    <div class="intro-scene" id="scene-dialogue">
+        <div class="intro-bg dark-bg"></div>
+             <div class="dialogue-panel">
+                <div class="dialogue-role" id="dialogue-role"></div>
+             <div class="dialogue-text" id="dialogue-text"></div>
+                <div class="dialogue-next" id="dialogue-next">▼</div>
+         </div>
+    </div>
+
+    <!-- Слой 4: Автобус -->
+    <div class="intro-scene" id="scene-bus">
+        <div class="intro-bg road-bg"></div>
+        <img src="assets/images/intro/bus-1.png" class="intro-bus" id="bus-img" alt="Bus">
+    </div>
+
+    <!-- Слой 5: Дом -->
+    <div class="intro-scene" id="scene-house">
+        <div class="intro-bg house-bg"></div>
+    </div>
+
+    <!-- Текст и кнопка "Пропустить" -->
+    <div class="intro-ui">
+        <div class="intro-text" id="intro-text"></div>
+        <button class="skip-btn" id="btn-skip-intro">ПРОПУСТИТЬ ➔</button>
+    </div>
+</div>
+
+<div id="main-menu" class="screen hidden">
+    <!-- ВЕРХНЯЯ ЧАСТЬ: сцена -->
+    <div class="scene">
+        <div class="scene-bg"></div>
+
+        <!-- ОБЛАКА: правь top, size, duration, delay прямо тут -->
+        <div class="cloud" style="
+            --top: 128px;
+            --size: 120px;
+            --duration: 60s;
+            --delay: 3s;
+            background-image: url('assets/images/ui/cloud-1.webp');
+        "></div>
+
+        <div class="cloud" style="
+            --top: 85px;
+            --size: 80px;
+            --duration: 90s;
+            --delay: 15s;
+            background-image: url('assets/images/ui/cloud-2.webp');
+        "></div>
+
+        <div class="cloud" style="
+            --top: 200px;
+            --size: 150px;
+            --duration: 120s;
+            --delay: 10s;
+            background-image: url('assets/images/ui/cloud-1.webp');
+        "></div>
+
+        <!-- ДЫМ: left/top — позиция над трубой; duration — скорость подъёма -->
+        <div class="smoke" style="
+            --left: 312px;
+            --top: 350px;
+            --size: 30px;
+            --duration: 6s;
+            --delay: 0s;
+            background-image: url('assets/images/ui/smoke-1.webp');
+        "></div>
+
+        <div class="smoke" style="
+            --left: 304px;
+            --top: 350px;
+            --size: 32px;
+            --duration: 6s;
+            --delay: 3s;
+            background-image: url('assets/images/ui/smoke-2.webp');
+        "></div>
+    </div>
+
+    <!-- ТОП-БАР -->
+    <div class="top-bar">
+        <button id="btn-help" class="pixel-chip" aria-label="Помощь">
+            <span class="chip-glyph chip-glyph--help" aria-hidden="true">?</span>
+            <span class="chip-label">HELP</span>
+        </button>
+
+        <div class="top-bar-group">
+            <button id="btn-sound" class="pixel-chip" aria-label="Звук" aria-pressed="true" data-state="on">
+                <span class="chip-glyph chip-glyph--sound" aria-hidden="true">
+                    <svg viewBox="0 0 16 16" width="16" height="16" shape-rendering="crispEdges">
+                        <rect x="1" y="6" width="2" height="4"/>
+                        <rect x="3" y="5" width="2" height="6"/>
+                        <rect x="5" y="3" width="2" height="10"/>
+                        <rect x="7" y="1" width="2" height="14"/>
+                        <rect class="sound-wave" x="10" y="4" width="2" height="2"/>
+                        <rect class="sound-wave" x="12" y="6" width="2" height="4"/>
+                        <rect class="sound-wave" x="10" y="10" width="2" height="2"/>
+                    </svg>
+                </span>
+                <span class="chip-label" id="sound-label">ON</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- НИЖНЯЯ ЧАСТЬ: логотип + кнопки -->
+    <div class="menu-bottom">
+        <div class="logo-wrapper">
+            <div class="logo-text">AMBER<br>FIELDS</div>
+        </div>
+
+        <div class="menu-buttons">
+    <button id="btn-play" class="btn-menu btn-primary">Играть</button>
+    <button id="btn-settings" class="btn-menu">Настройки</button>
+    <button id="btn-credits" class="btn-menu">Credits</button>
+    </div>
+    </div>
+</div>
+
+    <div id="game-screen" class="screen hidden"></div>
+
+    <!-- === ЗАСТАВКА: ИГРА НАЧАЛАСЬ === -->
+    <div id="game-started-screen" class="screen hidden">
+        <div class="started-content">
+            <div class="started-badge">ПРОГРЕСС СОХРАНЁН</div>
+
+            <h2 class="started-title">ИГРА<br>НАЧАЛАСЬ</h2>
+
+            <p class="started-text">
+                Интро пройдено. Теперь при следующем заходе
+                вы продолжите игру, а не начнёте её заново.
+            </p>
+
+            <div class="started-chip" aria-hidden="true">
+                <span>ИГРАТЬ</span>
+                <span class="started-chip-arrow">→</span>
+                <span class="started-chip-next">ПРОДОЛЖИТЬ</span>
+            </div>
+
+            <button id="btn-reload-after-start" class="started-reload" type="button">
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+                    <path d="M13 8a5 5 0 1 1-1.6-3.7"/>
+                    <path d="M13 2v4H9"/>
+                </svg>
+                ОБНОВИТЬ САЙТ
+            </button>
+
+            <p class="started-hint">
+                Перезагрузите страницу, чтобы увидеть меню
+                с кнопкой «Продолжить».
+            </p>
+        </div>
+    </div>
+
+    <script src="js/viewport.js"></script>
+    <script src="js/ambient.js"></script>
+    <script src="js/asset-manager.js"></script>
+    <script src="js/loader.js"></script>
+    <script src="js/progress.js"></script>
+    <script src="js/help-data.js"></script>
+    <script src="js/modal.js"></script>
+    <script src="js/main-menu.js"></script>
+    <script src="js/intro.js"></script>
+    <script src="admins.js"></script>
+    <script src="js/admin.js"></script>
+    
+ <!-- Окно технических работ -->
+<div id="loader-maintenance" class="maintenance-box hidden-element">
+    <!-- Фон: ночное поле, звёзды, светлячки, зерно и виньетка -->
+    <div class="maintenance-scene" aria-hidden="true">
+        <div class="msky"></div>
+        <div class="maurora maurora-1"></div>
+        <div class="maurora maurora-2"></div>
+        <div class="maurora maurora-3"></div>
+        <div id="maintenance-stars" class="mstars"></div>
+        <div class="mhorizon"></div>
+        <div class="mhills mhills-far"></div>
+        <div class="mhills mhills-near"></div>
+        <div id="maintenance-fireflies" class="mfireflies"></div>
+        <div class="mgrain"></div>
+        <div class="mscanlines"></div>
+        <div class="mvignette"></div>
+    </div>
+
+    <div class="maintenance-content">
+        <div class="maintenance-kicker">
+            <span class="kicker-dot"></span>
+            AMBER FIELDS · НОЧНАЯ СМЕНА
+        </div>
+
+        <div class="raccoon-sphere">
+            <!-- Ambient-свечение: сюда рисуются кадры ролика, CSS их размывает -->
+            <canvas class="sphere-ambient" id="maintenance-ambient" width="40" height="40" aria-hidden="true"></canvas>
+            <div class="sphere-glow"></div>
+            <div class="sphere-halo"></div>
+            <div class="sphere-ring"></div>
+            <div class="sphere-orbit"><span class="orbit-dot"></span></div>
+            <div class="sphere-frame">
+                <video id="maintenance-video" class="maintenance-video" autoplay loop muted playsinline>
+                    <source src="assets/video/raccoon.mp4" type="video/mp4">
+                </video>
+                <div class="sphere-shine"></div>
+            </div>
+            <!-- Пиксельные искры вокруг сферы -->
+            <span class="spark spark-1"></span>
+            <span class="spark spark-2"></span>
+            <span class="spark spark-3"></span>
+            <span class="spark spark-4"></span>
+            <span class="spark spark-5"></span>
+            <span class="spark spark-6"></span>
+        </div>
+
+        <div class="sphere-caption">
+            <span class="caption-dot"></span>
+            енот на смене
+        </div>
+
+        <h1 class="maintenance-title">
+            <span class="title-line">ТЕХНИЧЕСКИЕ</span>
+            <span class="title-line title-accent">РАБОТЫ</span>
+        </h1>
+
+        <p id="maintenance-message" class="maintenance-message">
+            Енот пробрался в серверную. Чиним провода, греем лампы — скоро вернёмся.
+        </p>
+
+        <div class="maintenance-status" aria-hidden="true">
+            <div class="status-head">
+                <span class="status-label"><i class="status-chevron">›</i> чиним сервер</span>
+                <span class="status-dots"><i></i><i></i><i></i></span>
+            </div>
+            <div class="status-track"><div class="status-fill"></div></div>
+        </div>
+
+        <div class="maintenance-foot">не закрывай вкладку — енот почти всё починил</div>
+    </div>
+</div>
+<!-- === МОДАЛКА НАСТРОЕК === -->
+<div id="modal-settings" class="modal-overlay hidden-element">
+    <div class="modal-panel">
+        <button class="modal-close" aria-label="Закрыть" onclick="Modal.close()">✕</button>
+        <h2 class="modal-title">НАСТРОЙКИ</h2>
+        <div class="modal-body">
+            <!-- === ИГРА === -->
+            <div class="settings-group">
+                <div class="group-label">ИГРА</div>
+
+                <div class="setting-row">
+                    <span class="setting-label">Язык</span>
+                    <div class="toggle-group" data-setting="language">
+                        <button class="toggle-option active" data-value="ru">RU</button>
+                        <button class="toggle-option" data-value="en">EN</button>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <span class="setting-label">Звуки</span>
+                    <div class="toggle-group" data-setting="sfx">
+                        <button class="toggle-option active" data-value="on">ВКЛ</button>
+                        <button class="toggle-option" data-value="off">ВЫКЛ</button>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <span class="setting-label">Музыка</span>
+                    <div class="toggle-group" data-setting="bgm">
+                        <button class="toggle-option active" data-value="on">ВКЛ</button>
+                        <button class="toggle-option" data-value="off">ВЫКЛ</button>
+                    </div>
+                </div>
+
+                <div class="setting-row">
+                    <span class="setting-label">Уведомления</span>
+                    <div class="toggle-group" data-setting="notifications">
+                        <button class="toggle-option" data-value="off">ВЫКЛ</button>
+                        <button class="toggle-option active" data-value="on">ВКЛ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- === ДРУГОЕ === -->
+            <div class="settings-group">
+                <div class="group-label">ДРУГОЕ</div>
+
+                <button id="btn-share" class="action-btn share">
+                    <svg class="btn-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+                        <path d="M6 3H3v10h10v-3"/>
+                        <path d="M9 2h5v5"/>
+                        <path d="M8 8l6-6"/>
+                    </svg>
+                    ПОДЕЛИТЬСЯ ПРОЕКТОМ
+                </button>
+
+                <button id="btn-reset-progress" class="action-btn reset">
+                    <svg class="btn-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" aria-hidden="true">
+                        <path d="M13 8a5 5 0 1 1-1.6-3.7"/>
+                        <path d="M13 2v4H9"/>
+                    </svg>
+                    СБРОСИТЬ ПРОГРЕСС
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- === ПОДТВЕРЖДЕНИЕ СБРОСА === -->
+<div id="modal-reset-confirm" class="modal-overlay hidden-element">
+    <div class="modal-panel danger-panel">
+        <div class="danger-icon">!</div>
+        <h2 class="modal-title danger-title">ВНИМАНИЕ</h2>
+        <div class="modal-body">
+            <p class="danger-text">
+                Если вы сбросите прогресс, все ваши ресурсы,
+                постройки, растения и достижения будут потеряны
+                навсегда. Вы также будете удалены из таблицы
+                лидеров, и всё придётся начинать с нуля.
+            </p>
+            <div class="danger-actions">
+                <button id="btn-reset-cancel" class="action-btn danger-cancel">
+                    ОТМЕНА
+                </button>
+                <button id="btn-reset-confirm" class="action-btn danger-confirm" disabled>
+                    СБРОСИТЬ (5)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- === ЭКРАН ТИТРОВ === -->
+<div id="credits-screen" class="credits-overlay hidden-element">
+    <!-- Небо: три слоя звёзд разной глубины — параллакс включается из modal.js -->
+    <div class="credits-sky" aria-hidden="true">
+        <div class="credits-stars" data-depth="0.05"></div>
+        <div class="credits-stars" data-depth="0.12"></div>
+        <div class="credits-stars" data-depth="0.22"></div>
+    </div>
+
+    <!-- Светлячки над полем -->
+    <div class="credits-fireflies" aria-hidden="true"></div>
+
+    <!-- Дальний горизонт -->
+    <div class="credits-horizon" aria-hidden="true"></div>
+
+    <!-- Виньетка и сканлайны -->
+    <div class="credits-vignette" aria-hidden="true"></div>
+
+<button class="credits-close" aria-label="Закрыть">
+    <svg viewBox="0 0 24 24" width="14" height="14">
+        <path d="M5 5 L19 19 M19 5 L5 19" stroke="currentColor" stroke-width="3" stroke-linecap="square" fill="none"/>
+    </svg>
+</button>
+
+    <div class="credits-scroll">
+        <div class="credits-block">
+            <h2 class="credits-title">AMBER FIELDS</h2>
+            <p class="credits-subtitle">история о доме, земле и одном еноте</p>
+        </div>
+
+        <div class="credits-block">
+            <span class="credit-role">РАЗРАБОТКА</span>
+            <span class="credit-name">Sedonit</span>
+        </div>
+
+        <div class="credits-block">
+            <span class="credit-role">АРТ-ДИЗАЙН</span>
+            <span class="credit-name">Sedonit</span>
+        </div>
+
+        <div class="credits-block">
+            <span class="credit-role">ПРОГРАММИРОВАНИЕ</span>
+            <span class="credit-name">Sedonit и AI-ассистенты</span>
+        </div>
+
+        <div class="credits-block">
+            <span class="credit-role">ГЕЙМДИЗАЙН</span>
+            <span class="credit-name">Sedonit</span>
+        </div>
+
+        <div class="credits-block">
+            <span class="credit-role">ТЕСТИРОВАНИЕ</span>
+            <span class="credit-name">Sedonit и все, кто просто играл</span>
+        </div>
+
+        <div class="credits-block">
+            <span class="credit-role">ЗВУК И МУЗЫКА</span>
+            <span class="credit-name">открытые библиотеки и YouTube-каналы</span>
+        </div>
+
+        <div class="credits-block">
+            <span class="credit-role">ОСОБАЯ БЛАГОДАРНОСТЬ</span>
+            <span class="credit-name">Еноту. Он не наш. Но мы его не обижаем.</span>
+        </div>
+        </div>
+
+        <!-- Финальная карточка — появляется, когда титры докрутились -->
+        <div class="credits-thanks">
+            <p class="thanks-kicker">КОНЕЦ</p>
+            <p class="thanks-title">СПАСИБО, ЧТО ДОЕХАЛИ</p>
+            <p class="thanks-subtitle">Автобус обратно — в 6:40.</p>
+
+            <!-- Енот в рамке, как кадр из плёнки -->
+            <div class="flying-raccoon hidden-element" id="flying-raccoon">
+                <canvas class="credits-ambient" id="credits-ambient" width="40" height="40" aria-hidden="true"></canvas>
+                <div class="raccoon-frame">
+                    <video id="credits-video" class="raccoon-video" autoplay loop muted playsinline>
+                        <source src="assets/video/raccoon.mp4" type="video/mp4">
+                    </video>
+                </div>
+                <p class="raccoon-caption">Енот-нарушитель. Он не наш.</p>
+            </div>
+
+            <p class="credits-return">нажми, чтобы вернуться</p>
+        </div>
+    </div>
+ <!-- === ЭКРАН ПОМОЩИ === -->
+<div id="help-screen" class="help-overlay hidden-element">
+    <div class="help-backdrop" aria-hidden="true"></div>
+
+    <div class="help-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <button class="help-close" aria-label="Закрыть">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M6 6l12 12M18 6L6 18"/>
+            </svg>
+        </button>
+
+        <div class="help-scroll">
+            <header class="help-header">
+                <span class="help-kicker"><i aria-hidden="true"></i> Amber Fields · Справочник</span>
+                <h1 class="help-title" id="help-title">Помощь</h1>
+                <p class="help-subtitle">Всё, что нужно знать о ферме, урожае и местном еноте.</p>
+            </header>
+
+            <div class="help-search">
+                <svg class="help-search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/>
+                    <path d="M20 20l-3.5-3.5"/>
+                </svg>
+                <input id="help-search" type="text" placeholder="Поиск по вопросам" autocomplete="off" aria-label="Поиск по вопросам">
+                <button class="help-search-clear" type="button" aria-label="Очистить поиск">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <path d="M6 6l12 12M18 6L6 18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="help-meta">
+                <span id="help-count">50 вопросов</span>
+                <span class="help-meta-hint">нажмите, чтобы раскрыть</span>
+            </div>
+
+            <div class="faq-list" id="faq-list"></div>
+
+            <div id="help-empty" class="help-empty hidden-element">
+                <span class="help-empty-icon" aria-hidden="true">?</span>
+                <p class="help-empty-title">Ничего не нашлось</p>
+                <p class="help-empty-text">Попробуйте другой запрос — например, «урожай» или «енот».</p>
+            </div>
+
+            <div class="help-contact">
+                <div class="contact-copy">
+                    <p class="contact-title">Не нашли ответ?</p>
+                    <p class="contact-text">Напишите нам — мы читаем каждое сообщение.</p>
+                </div>
+                <a href="mailto:sedopetrosan@gmail.com?subject=%D0%9E%D1%82%D0%B7%D1%8B%D0%B2%20%D0%BE%D0%B1%20%D0%B8%D0%B3%D1%80%D0%B5%20Amber%20Fields&amp;body=%D0%9F%D1%80%D0%B8%D0%B2%D0%B5%D1%82%21%20%D0%A5%D0%BE%D1%87%D1%83%20%D0%BF%D0%BE%D0%B4%D0%B5%D0%BB%D0%B8%D1%82%D1%8C%D1%81%D1%8F%20%D0%BE%D1%82%D0%B7%D1%8B%D0%B2%D0%BE%D0%BC%20%D0%BE%D0%B1%20%D0%B8%D0%B3%D1%80%D0%B5%20Amber%20Fields%3A%0A%0A" class="contact-link">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="3" y="5" width="18" height="14" rx="2"/>
+                        <path d="M3 7l9 6 9-6"/>
+                    </svg>
+                    sedopetrosan@gmail.com
+                </a>
+            </div>
+        </div>
+
+        <!-- Наверх: появляется только после прокрутки вниз -->
+        <button id="help-to-top" class="help-to-top" type="button" aria-label="Наверх" aria-hidden="true" tabindex="-1">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 19V5M5 12l7-7 7 7"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- Уведомление (тост) -->
+<div id="toast" class="toast" role="status" aria-live="polite" aria-hidden="true">
+    <svg class="toast-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+        <path d="M2.5 8.5l4 4 7-9"/>
+    </svg>
+    <span class="toast-text"></span>
+</div>
+
+<div id="transition-curtain" aria-hidden="true"></div>
+</body>
+</html>

@@ -1,0 +1,585 @@
+/* === ПОДКЛЮЧЕНИЕ ПИКСЕЛЬНОГО ШРИФТА === */
+@font-face {
+    font-family: 'Press Start 2P';
+    src: url('../assets/fonts/PressStart2P-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* === КОНТЕЙНЕР === */
+#main-menu {
+    --scene-height: 65%;
+    overflow: hidden;
+    background: #1a1020;
+    display: flex;
+    flex-direction: column;
+}
+
+/* === СЦЕНА (верхняя часть) === */
+.scene {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--scene-height);
+    overflow: hidden;
+    z-index: 1;
+}
+
+.scene-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url("../assets/images/ui/bg.webp");
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Плавный переход от сцены к низу */
+.scene::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 30%;
+    background: linear-gradient(to bottom, transparent 0%, #1a1020 100%);
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* === ОБЛАКА (управление через inline-style в HTML) === */
+.cloud {
+    position: absolute;
+    left: 0;
+    top: var(--top, 10%);
+    width: var(--size, 100px);
+    height: calc(var(--size, 100px) * 0.5);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    animation: cloudDrift var(--duration, 70s) linear infinite;
+    animation-delay: var(--delay, 0s);
+    animation-fill-mode: backwards;
+    pointer-events: none;
+    opacity: 0.9;
+    z-index: 2;
+}
+
+@keyframes cloudDrift {
+    from { transform: translateX(-200px); }
+    to   { transform: translateX(680px); }
+}
+
+/* === ДЫМ (управление через inline-style в HTML) === */
+.smoke {
+    position: absolute;
+    left: var(--left, 40%);
+    top: var(--top, 55%);
+    width: var(--size, 30px);
+    height: var(--size, 30px);
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0;
+    animation: smokeRise var(--duration, 6s) ease-out infinite;
+    animation-delay: var(--delay, 0s);
+    pointer-events: none;
+    z-index: 3;
+}
+
+@keyframes smokeRise {
+    0%   { opacity: 0;   transform: translateY(0)      scale(0.7) rotate(-3deg); }
+    15%  { opacity: 0.9; }
+    60%  { opacity: 0.55; }
+    100% { opacity: 0;   transform: translateY(-90px) scale(1.6) rotate(4deg); }
+}
+
+/* === ТОП-БАР === */
+.top-bar {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    right: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 20;
+}
+
+.top-bar-group {
+    display: flex;
+    gap: 10px;
+}
+
+/* Пиксельная плашка топ-бара */
+.pixel-chip {
+    --chip-bg: #2b1d38;
+    --chip-face: #3d2a4d;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 12px 0 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    line-height: 1;
+    letter-spacing: 1.5px;
+    color: #ffe4b5;
+    background: var(--chip-bg);
+    border: 3px solid #0a0604;
+    border-radius: 0;
+    box-shadow:
+        inset 0 3px 0 var(--chip-face),
+        inset 0 -3px 0 #1a1020,
+        4px 4px 0 #0a0604;
+    cursor: pointer;
+    image-rendering: pixelated;
+    transition:
+        transform 0.06s steps(2),
+        box-shadow 0.06s steps(2),
+        background 0.12s steps(2);
+}
+
+.pixel-chip:hover {
+    background: #342244;
+}
+
+.pixel-chip:active {
+    transform: translate(3px, 3px);
+    box-shadow:
+        inset 0 3px 0 var(--chip-face),
+        inset 0 -3px 0 #1a1020,
+        1px 1px 0 #0a0604;
+}
+
+.pixel-chip:focus-visible {
+    outline: 3px solid #ffd97a;
+    outline-offset: 3px;
+}
+
+.chip-glyph {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    background: #1a1020;
+    box-shadow:
+        inset 0 0 0 2px #0a0604,
+        inset 0 2px 0 #4a3458;
+    color: #ffd97a;
+    flex-shrink: 0;
+}
+
+.chip-glyph--help {
+    font-size: 12px;
+    line-height: 1;
+}
+
+.chip-glyph--sound svg {
+    display: block;
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+}
+
+.chip-label {
+    padding-top: 1px;
+    color: #ffe4b5;
+}
+
+/* Выключенный звук: приглушаем волну и подчёркиваем состояние */
+.pixel-chip[data-state="off"] {
+    --chip-bg: #241a2c;
+    --chip-face: #322440;
+    color: #a89680;
+}
+
+.pixel-chip[data-state="off"] .chip-glyph {
+    color: #8a7660;
+}
+
+.pixel-chip[data-state="off"] .sound-wave {
+    opacity: 0;
+}
+
+.pixel-chip[data-state="off"] .chip-glyph--sound::after {
+    content: '';
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    top: 50%;
+    height: 2px;
+    margin-top: -1px;
+    background: #c46a55;
+    transform: rotate(-45deg);
+    box-shadow: 1px 1px 0 #0a0604;
+}
+
+.pixel-chip[data-state="off"] .chip-label {
+    color: #a89680;
+}
+
+/* === НИЖНЯЯ ЧАСТЬ (лого + кнопки) === */
+.menu-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: var(--scene-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    padding: 12px 24px 22px;
+    z-index: 10;
+    background: #1a1020;
+}
+
+/* === ЛОГОТИП === */
+.logo-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.logo-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    line-height: 1.4;
+    letter-spacing: 2px;
+    text-align: center;
+    color: #ffe4b5;
+    text-shadow:
+         3px  3px 0 #4a1a00,
+        -2px -2px 0 #4a1a00,
+         2px -2px 0 #4a1a00,
+        -2px  2px 0 #4a1a00,
+         0    6px 0 #2a0e00;
+    animation: logoSway 6s steps(12) infinite;
+    transform-origin: center center;
+}
+
+@keyframes logoSway {
+    0%, 100% { transform: rotate(-1.2deg); }
+    50%      { transform: rotate( 1.2deg); }
+}
+
+/* === ПЛАВНОЕ ПОЯВЛЕНИЕ СЦЕНЫ === */
+#main-menu.active .scene {
+    animation: sceneFadeIn 0.9s ease-out;
+}
+
+@keyframes sceneFadeIn {
+    from { opacity: 0; transform: scale(1.03); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+/* === ТОП-БАР — появляется первым === */
+#main-menu.active .top-bar {
+    animation: softFadeIn 0.6s ease-out 0.3s backwards;
+}
+
+/* === ЛОГОТИП — падает сверху с отскоком === */
+#main-menu.active .logo-wrapper {
+    animation: logoDrop 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s backwards;
+}
+
+@keyframes logoDrop {
+    from { opacity: 0; transform: translateY(-50px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes softFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* === ЗАНАВЕС ПЕРЕХОДА === */
+#transition-curtain {
+    position: fixed;
+    inset: 0;
+    background: #0a0612;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 9999;
+    transition: opacity 0.5s ease;
+}
+
+#transition-curtain.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* === КНОПКИ МЕНЮ === */
+.menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 292px;
+    align-items: center;
+}
+
+.btn-menu {
+    position: relative;
+    width: 100%;
+    padding: 18px 22px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #ffe4b5;
+    text-shadow: 2px 2px 0 #1a0800;
+    background: #4a2c18;
+    border: 3px solid #0a0604;
+    border-radius: 0;
+    box-shadow:
+        inset 0 3px 0 #6b4226,
+        inset 0 -3px 0 #2e1a0d,
+        5px 5px 0 #0a0604;
+    cursor: pointer;
+    image-rendering: pixelated;
+    transition:
+        transform 0.06s steps(2),
+        box-shadow 0.06s steps(2),
+        background 0.12s steps(2),
+        color 0.12s steps(2);
+    opacity: 0;
+}
+
+/* Пиксельные маркеры по бокам при наведении */
+.btn-menu::before,
+.btn-menu::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 6px;
+    height: 6px;
+    margin-top: -3px;
+    background: #ffd97a;
+    box-shadow: 1px 1px 0 #1a0800;
+    opacity: 0;
+    transition: opacity 0.1s steps(2);
+    pointer-events: none;
+}
+
+.btn-menu::before { left: 10px; }
+.btn-menu::after  { right: 10px; }
+
+.btn-menu:hover {
+    background: #57331c;
+}
+
+.btn-menu:hover::before,
+.btn-menu:hover::after {
+    opacity: 1;
+    animation: pixelBlink 0.7s steps(2) infinite;
+}
+
+.btn-menu:active {
+    transform: translate(5px, 5px);
+    box-shadow:
+        inset 0 2px 0 #6b4226,
+        inset 0 -2px 0 #2e1a0d,
+        0 0 0 #0a0604;
+}
+
+.btn-menu:focus-visible {
+    outline: 3px solid #ffd97a;
+    outline-offset: 3px;
+}
+
+/* === АКЦЕНТНАЯ (Играть) === */
+.btn-menu.btn-primary {
+    padding: 22px 22px;
+    font-size: 13px;
+    letter-spacing: 2.5px;
+    color: #fff3d0;
+    text-shadow: 2px 2px 0 #5a2a00;
+    background: #b06a24;
+    box-shadow:
+        inset 0 4px 0 #d98a3a,
+        inset 0 -4px 0 #7a4414,
+        5px 5px 0 #0a0604;
+}
+
+.btn-menu.btn-primary:hover {
+    background: #c07a30;
+}
+
+.btn-menu.btn-primary:active {
+    box-shadow:
+        inset 0 3px 0 #d98a3a,
+        inset 0 -3px 0 #7a4414,
+        0 0 0 #0a0604;
+}
+
+/* === Анимация появления кнопок === */
+#main-menu.active .btn-menu {
+    animation: btnFadeIn 0.55s steps(6) forwards;
+}
+
+.btn-menu:nth-child(1) { animation-delay: 0.85s; }
+.btn-menu:nth-child(2) { animation-delay: 1.05s; }
+.btn-menu:nth-child(3) { animation-delay: 1.25s; }
+
+@keyframes btnFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pixelBlink {
+    0%, 100% { visibility: visible; }
+    50%      { visibility: hidden; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #main-menu.active .scene,
+    #main-menu.active .top-bar,
+    #main-menu.active .logo-wrapper,
+    .logo-text,
+    .btn-menu,
+    .btn-menu::before,
+    .btn-menu::after {
+        animation: none !important;
+    }
+
+    .btn-menu {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* === ЗАСТАВКА «ИГРА НАЧАЛАСЬ» === */
+#game-started-screen {
+    background: #17111f;
+    padding: 30px 26px;
+}
+
+.started-content {
+    width: 100%;
+    max-width: 360px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+#game-started-screen.active .started-content {
+    animation: startedIn 0.5s steps(5) both;
+}
+
+@keyframes startedIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.started-badge {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: #9fe0b0;
+    background: #1b2a21;
+    border: 2px solid #4b7a58;
+    padding: 8px 10px;
+    box-shadow: 3px 3px 0 #0b1110;
+}
+
+.started-title {
+    margin: 24px 0 0;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 20px;
+    line-height: 1.8;
+    letter-spacing: 2px;
+    color: #ffd97a;
+    text-shadow: 3px 3px 0 #4a2a00;
+}
+
+.started-text {
+    margin: 18px 0 0;
+    max-width: 300px;
+    font-size: 13px;
+    line-height: 1.75;
+    color: rgba(255, 228, 181, 0.78);
+}
+
+.started-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 22px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: rgba(255, 228, 181, 0.45);
+}
+
+.started-chip-arrow {
+    color: #8a6c34;
+}
+
+.started-chip-next {
+    color: #ffd97a;
+}
+
+.started-reload {
+    width: 100%;
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 18px 16px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    color: #2a1808;
+    background: #e8c477;
+    border: 3px solid #0a0604;
+    border-radius: 0;
+    box-shadow:
+        inset 0 3px 0 #f4dfa6,
+        inset 0 -4px 0 #b08830,
+        5px 5px 0 #0a0604;
+    cursor: pointer;
+    transition:
+        transform 0.06s steps(2),
+        box-shadow 0.06s steps(2),
+        background 0.12s steps(2);
+}
+
+.started-reload:hover {
+    background: #f0cf87;
+}
+
+.started-reload:active {
+    transform: translate(5px, 5px);
+    box-shadow:
+        inset 0 2px 0 #f4dfa6,
+        inset 0 -2px 0 #b08830,
+        0 0 0 #0a0604;
+}
+
+.started-reload:focus-visible {
+    outline: 3px solid #ffd97a;
+    outline-offset: 3px;
+}
+
+.started-hint {
+    margin: 18px 0 0;
+    max-width: 280px;
+    font-size: 11px;
+    line-height: 1.6;
+    color: rgba(255, 228, 181, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #game-started-screen.active .started-content {
+        animation: none;
+    }
+}
